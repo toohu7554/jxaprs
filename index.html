@@ -1,1 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>esm</title>
+</head>
+<body>
+	<script type="module"> //ESM形式の場合はtype="module"の記載が必須です。
 
+		//モジュールのファイルを読み込みます。
+		//HTMLファイルとjaxa.earth.esm.jsのファイルは同一フォルダにある想定です。
+		import * as je from "./jaxa.earth.esm.js";
+
+		//全てのクラスやメソッドはjeオブジェクトを使ってアクセスします。
+		console.log(je);
+		
+		//ここにコードを記載します。
+		
+	</script>
+</body>
+</html>
