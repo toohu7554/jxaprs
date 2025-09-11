@@ -1,0 +1,52 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="JAXA Earth API Demo">
+  <main>
+    <div id="app"></div>
+    <input type="date" id="date" />
+  </main>
+</Layout>
+
+<script>
+  import * as je from "../libs/data.earth.jaxa.jp_api_javascript_v1.2.2_jaxa.earth.esm";
+
+	const app = document.querySelector("#app");
+	
+  const renderMap = async (date: Date) => {
+    const image = await je.getImage({
+      //MODISの地表面温度のデータ
+      //https://data.earth.jaxa.jp/ja/datasets/#/id/NASA.EOSDIS_Terra.MODIS_MOD11C1-LST.daytime.v061_global_half-monthly
+      collection:
+        "https://s3.ap-northeast-1.wasabisys.com/je-pds/cog/v1/NASA.EOSDIS_Terra.MODIS_MOD11C1-LST.daytime.v061_global_half-monthly/collection.json",
+      band: "LST",
+      date,
+      colorMap: {
+        min: 273.15 - 5,
+        max: 273.15 + 35,
+        colors: "jet",
+      },
+      bbox: null,
+      width: null,
+      height: null,
+      onloading: null,
+    });
+    const canvas = image.getCanvas();
+    if (app?.firstChild) {
+      app.removeChild(app.firstChild);
+    }
+    app?.appendChild(canvas);
+  };
+  const date = new Date();
+  renderMap(date);
+
+	// 日付入力関連処理
+  const dateInput = document.querySelector("#date");
+  dateInput?.setAttribute("value", date.toISOString().split("T")[0]);
+  dateInput?.addEventListener("change", async (e) => {
+    const value = (e?.target as HTMLInputElement).value;
+    const date = new Date(value);
+    renderMap(date);
+  });
+</script>
