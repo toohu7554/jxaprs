@@ -1,48 +1,52 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-	<meta charset="UTF-8">
-	<title>esm</title>
-</head>
-<body>
-	<script type="module"> //ESM形式の場合はtype="module"の記載が必須です。
+---
+import Layout from "../layouts/Layout.astro";
+---
 
-		//モジュールのファイルを読み込みます。
-		//HTMLファイルとjaxa.earth.esm.jsのファイルは同一フォルダにある想定です。
-		import * as je from "./jaxa.earth.esm.js";
+<Layout title="JAXA Earth API Demo">
+  <main>
+    <div id="app"></div>
+    <input type="date" id="date" />
+  </main>
+</Layout>
 
-		//全てのクラスやメソッドはjeオブジェクトを使ってアクセスします。
-		console.log(je);
-		
-		const image = await je.getImage({
-	//利用するデータセットのcollection.jsonのURLを記載します。
-	collection: "https://s3.ap-northeast-1.wasabisys.com/je-pds/cog/v1/JAXA.EORC_ALOS.PRISM_AW3D30.v3.2_global/collection.json",
+<script>
+  import * as je from "../libs/data.earth.jaxa.jp_api_javascript_v1.2.2_jaxa.earth.esm";
 
-	//利用するデータセットのバンドを指定します。
-	band: "DSM",
+	const app = document.querySelector("#app");
+	
+  const renderMap = async (date: Date) => {
+    const image = await je.getImage({
+      //MODISの地表面温度のデータ
+      //https://data.earth.jaxa.jp/ja/datasets/#/id/NASA.EOSDIS_Terra.MODIS_MOD11C1-LST.daytime.v061_global_half-monthly
+      collection:
+        "https://s3.ap-northeast-1.wasabisys.com/je-pds/cog/v1/NASA.EOSDIS_Terra.MODIS_MOD11C1-LST.daytime.v061_global_half-monthly/collection.json",
+      band: "LST",
+      date,
+      colorMap: {
+        min: 273.15 - 5,
+        max: 273.15 + 35,
+        colors: "jet",
+      },
+      bbox: null,
+      width: null,
+      height: null,
+      onloading: null,
+    });
+    const canvas = image.getCanvas();
+    if (app?.firstChild) {
+      app.removeChild(app.firstChild);
+    }
+    app?.appendChild(canvas);
+  };
+  const date = new Date();
+  renderMap(date);
 
-	//データを取得する緯度経度範囲を記載します。
-	//[最小経度(西), 最小緯度(南), 最大経度(東), 最大緯度(北)]
-	bbox: [-180, -90, 180, 90],
-
-	//データを取得する画像のサイズをピクセル数で記載します。
-	width: 1000,
-	height: 500,
-
-	//可視化用のカラーマップを指定します。
-	colorMap: {
-		//最小値
-		min: 0,
-		//最大値
-		max: 6000,
-		//最小値～最大値をjet（青～緑～黄～赤の虹色）で塗りつぶします。
-		colors: "jet"
-	}
-});
-
-//可視化した結果をHTMLCanvasElementとして取得し、HTML上に追加します。
-document.body.appendChild(image.getCanvas());
-		
-	</script>
-</body>
-</html>
+	// 日付入力関連処理
+  const dateInput = document.querySelector("#date");
+  dateInput?.setAttribute("value", date.toISOString().split("T")[0]);
+  dateInput?.addEventListener("change", async (e) => {
+    const value = (e?.target as HTMLInputElement).value;
+    const date = new Date(value);
+    renderMap(date);
+  });
+</script>
